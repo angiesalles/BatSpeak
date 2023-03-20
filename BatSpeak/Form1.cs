@@ -53,7 +53,7 @@ namespace BatSpeak
         private WaveFileWriter audioWriter;
         private bool recording = false;
         private BufferedWaveProvider bufferedWaveProvider;
-        private string mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BatSpeak-master", "BatSpeak", "Media");
+        private string mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BatSpeak", "BatSpeak", "Media");
         private WaveOutEvent waveOut;
         private SoundPlayer player;
 
