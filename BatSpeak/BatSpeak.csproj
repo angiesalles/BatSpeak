@@ -6,15 +6,21 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>True</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Accord.Video.FFMPEG" Version="3.8.0" />
     <PackageReference Include="Accord.Video.FFMPEG.x64" Version="3.8.0" />
     <PackageReference Include="AForge.Controls" Version="2.2.5" />
+    <PackageReference Include="AForge.Controls.Matrixden" Version="2.2.5.1" />
     <PackageReference Include="AForge.Video" Version="2.2.5" />
     <PackageReference Include="AForge.Video.DirectShow" Version="2.2.5" />
-    <PackageReference Include="VisioForge.DotNet.Core.TRIAL" Version="15.1.12" />
+    <PackageReference Include="AForge.Video.FFMPEG" Version="2.2.5.1-rc" />
+    <PackageReference Include="NAudio" Version="2.1.0" />
+    <PackageReference Include="NAudio.WaveFormRenderer" Version="2.0.0" />
+    <PackageReference Include="System.Windows.Forms.DataVisualization" Version="1.0.0-prerelease.20110.1" />
+    <PackageReference Include="WinForms.DataVisualization" Version="1.8.0" />
   </ItemGroup>
 
   <ItemGroup>

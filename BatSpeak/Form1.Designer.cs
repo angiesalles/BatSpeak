@@ -50,15 +50,22 @@ namespace BatSpeak
             comboBox2 = new ComboBox();
             button7 = new Button();
             button8 = new Button();
+            comboBox3 = new ComboBox();
+            label6 = new Label();
+            button9 = new Button();
+            trackBar1 = new TrackBar();
+            label7 = new Label();
+            textBox4 = new TextBox();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)trackBar1).BeginInit();
             SuspendLayout();
             // 
             // button1
             // 
-            button1.Location = new Point(407, 93);
+            button1.Location = new Point(1026, 130);
             button1.Margin = new Padding(4, 5, 4, 5);
             button1.Name = "button1";
-            button1.Size = new Size(162, 39);
+            button1.Size = new Size(62, 39);
             button1.TabIndex = 0;
             button1.Text = "Start recording";
             button1.UseVisualStyleBackColor = true;
@@ -66,28 +73,28 @@ namespace BatSpeak
             // 
             // button2
             // 
-            button2.Location = new Point(660, 93);
+            button2.Location = new Point(1378, 130);
             button2.Margin = new Padding(4, 5, 4, 5);
             button2.Name = "button2";
-            button2.Size = new Size(161, 39);
+            button2.Size = new Size(63, 39);
             button2.TabIndex = 1;
             button2.Text = "Stop recording";
             button2.UseVisualStyleBackColor = true;
             // 
             // button3
             // 
-            button3.Location = new Point(584, 233);
+            button3.Location = new Point(1113, 271);
             button3.Margin = new Padding(4, 5, 4, 5);
             button3.Name = "button3";
             button3.Size = new Size(58, 39);
             button3.TabIndex = 2;
-            button3.Text = "Start Playback";
+            button3.Text = "Play";
             button3.UseVisualStyleBackColor = true;
             button3.Click += button3_Click;
             // 
             // button4
             // 
-            button4.Location = new Point(672, 233);
+            button4.Location = new Point(1307, 270);
             button4.Margin = new Padding(4, 5, 4, 5);
             button4.Name = "button4";
             button4.Size = new Size(62, 39);
@@ -109,7 +116,7 @@ namespace BatSpeak
             // 
             // button6
             // 
-            button6.Location = new Point(558, 500);
+            button6.Location = new Point(486, 234);
             button6.Margin = new Padding(4, 5, 4, 5);
             button6.Name = "button6";
             button6.Size = new Size(162, 39);
@@ -125,7 +132,7 @@ namespace BatSpeak
             videoSourcePlayer1.Location = new Point(3, 13);
             videoSourcePlayer1.Margin = new Padding(4);
             videoSourcePlayer1.Name = "videoSourcePlayer1";
-            videoSourcePlayer1.Size = new Size(384, 286);
+            videoSourcePlayer1.Size = new Size(396, 286);
             videoSourcePlayer1.TabIndex = 5;
             videoSourcePlayer1.Text = "videoSourcePlayer1";
             videoSourcePlayer1.VideoSource = null;
@@ -133,7 +140,7 @@ namespace BatSpeak
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(569, 52);
+            textBox1.Location = new Point(1188, 89);
             textBox1.Margin = new Padding(4, 5, 4, 5);
             textBox1.Name = "textBox1";
             textBox1.Size = new Size(79, 31);
@@ -141,7 +148,7 @@ namespace BatSpeak
             // 
             // textBox2
             // 
-            textBox2.Location = new Point(514, 192);
+            textBox2.Location = new Point(1133, 229);
             textBox2.Margin = new Padding(4, 5, 4, 5);
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(220, 31);
@@ -150,7 +157,7 @@ namespace BatSpeak
             // 
             // textBox3
             // 
-            textBox3.Location = new Point(521, 459);
+            textBox3.Location = new Point(449, 193);
             textBox3.Margin = new Padding(4, 5, 4, 5);
             textBox3.Name = "textBox3";
             textBox3.Size = new Size(220, 31);
@@ -169,7 +176,7 @@ namespace BatSpeak
             // pictureBox2
             // 
             pictureBox2.Image = null;
-            pictureBox2.Location = new Point(541, 293);
+            pictureBox2.Location = new Point(469, 13);
             pictureBox2.Margin = new Padding(4);
             pictureBox2.Name = "pictureBox2";
             pictureBox2.Size = new Size(200, 132);
@@ -179,7 +186,7 @@ namespace BatSpeak
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(538, 162);
+            label1.Location = new Point(1157, 199);
             label1.Name = "label1";
             label1.Size = new Size(185, 25);
             label1.TabIndex = 12;
@@ -188,7 +195,7 @@ namespace BatSpeak
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(514, 23);
+            label2.Location = new Point(1133, 60);
             label2.Name = "label2";
             label2.Size = new Size(191, 25);
             label2.TabIndex = 13;
@@ -197,7 +204,7 @@ namespace BatSpeak
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(526, 432);
+            label3.Location = new Point(454, 166);
             label3.Name = "label3";
             label3.Size = new Size(215, 25);
             label3.TabIndex = 14;
@@ -241,7 +248,7 @@ namespace BatSpeak
             // 
             // button8
             // 
-            button8.Location = new Point(444, 235);
+            button8.Location = new Point(1001, 229);
             button8.Name = "button8";
             button8.Size = new Size(116, 34);
             button8.TabIndex = 19;
@@ -249,11 +256,68 @@ namespace BatSpeak
             button8.UseVisualStyleBackColor = true;
             button8.Click += button8_Click;
             // 
+            // comboBox3
+            // 
+            comboBox3.FormattingEnabled = true;
+            comboBox3.Location = new Point(321, 407);
+            comboBox3.Name = "comboBox3";
+            comboBox3.Size = new Size(182, 33);
+            comboBox3.TabIndex = 20;
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(321, 379);
+            label6.Name = "label6";
+            label6.Size = new Size(171, 25);
+            label6.TabIndex = 21;
+            label6.Text = "Select sampling rate";
+            // 
+            // button9
+            // 
+            button9.Location = new Point(1205, 271);
+            button9.Margin = new Padding(4, 5, 4, 5);
+            button9.Name = "button9";
+            button9.Size = new Size(62, 39);
+            button9.TabIndex = 22;
+            button9.Text = "pause";
+            button9.UseVisualStyleBackColor = true;
+            button9.Click += button9_Click;
+            // 
+            // trackBar1
+            // 
+            trackBar1.Location = new Point(1052, 318);
+            trackBar1.Name = "trackBar1";
+            trackBar1.Size = new Size(329, 69);
+            trackBar1.TabIndex = 24;
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Location = new Point(1079, 362);
+            label7.Name = "label7";
+            label7.Size = new Size(0, 25);
+            label7.TabIndex = 26;
+            // 
+            // textBox4
+            // 
+            textBox4.Location = new Point(1012, 362);
+            textBox4.Margin = new Padding(4, 5, 4, 5);
+            textBox4.Name = "textBox4";
+            textBox4.Size = new Size(119, 31);
+            textBox4.TabIndex = 27;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(858, 580);
+            ClientSize = new Size(1454, 580);
+            Controls.Add(textBox4);
+            Controls.Add(label7);
+            Controls.Add(trackBar1);
+            Controls.Add(button9);
+            Controls.Add(label6);
+            Controls.Add(comboBox3);
             Controls.Add(button8);
             Controls.Add(button7);
             Controls.Add(comboBox2);
@@ -279,6 +343,7 @@ namespace BatSpeak
             Text = "BatSpeak";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
+            ((System.ComponentModel.ISupportInitialize)trackBar1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -306,5 +371,14 @@ namespace BatSpeak
         private ComboBox comboBox2;
         private Button button7;
         private Button button8;
+        private ComboBox comboBox3;
+        private Label label6;
+        private Button button9;
+        private TrackBar trackBar1;
+        private Label label7;
+        private TextBox textBox4;
+        private System.CodeDom.CodeTypeReference chart2;
+        private System.CodeDom.CodeTypeReference chart1;
+        private System.CodeDom.CodeTypeReference chart3;
     }
 }

@@ -10,25 +10,42 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using System.Threading;
 using System.Text.RegularExpressions;
 using AForge.Video;
-using System.Diagnostics;
+using AForge.Video.FFMPEG;
 using AForge.Video.DirectShow;
-//using AForge.Video.FFMPEG;
-using System.Collections;
 using System.IO;
-using System.Drawing.Imaging;
 using System.IO.Ports;
 using System.Globalization;
 using System.Net;
 using AForge.Controls;
-using VisioForge.Libs.NAudio.Wave;
-using VisioForge.Types;
-using Microsoft.VisualBasic.Devices;
-using VisioForge.Libs.WindowsMediaLib;
+//using VisioForge.Libs.NAudio.Wave;
+using NAudio.Wave;
+
+//using Microsoft.VisualBasic.Devices;
+
 using System.Media;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+
+using PlaybackState = NAudio.Wave.PlaybackState;
+
+using File = System.IO.File;
+using NAudio.Gui;
+using PictureBox = System.Windows.Forms.PictureBox;
+
+using WaveInEvent = NAudio.Wave.WaveInEvent;
+using WaveFormat = NAudio.Wave.WaveFormat;
+using BufferedWaveProvider = NAudio.Wave.BufferedWaveProvider;
+using WaveInEventArgs = NAudio.Wave.WaveInEventArgs;
+using WaveFileWriter = NAudio.Wave.WaveFileWriter;
+using WaveIn = NAudio.Wave.WaveIn;
+using WaveInCapabilities = NAudio.Wave.WaveInCapabilities;
+using WaveOut = NAudio.Wave.WaveOut;
+using WaveFileReader = NAudio.Wave.WaveFileReader;
+using WaveStream = NAudio.Wave.WaveStream;
+using System.Windows.Forms.DataVisualization;
+//Microsoft.Windows.SDK.Contracts
 
 namespace BatSpeak
 {
@@ -36,9 +53,9 @@ namespace BatSpeak
     {
         private FilterInfoCollection videoDevices;
         //private FilterInfoCollection audioDevices;
-
+        private System.Windows.Forms.Timer timer;
         private VideoCaptureDevice videoDevice;
-
+        private WaveStream audioStream;
         private int bufferSize = 65536;
         private VideoCapabilities[] snapshotCapabilities;
         private ArrayList listCamera = new ArrayList();
@@ -49,18 +66,34 @@ namespace BatSpeak
         //private string Audio= Application.StartupPath + @"\Audio\";
         private Stopwatch stopWatch = null;
         private static bool needSnapshot = false;
-        //private VideoFileWriter videoWriter;
+        private VideoFileWriter videoWriter;
         private WaveFileWriter audioWriter;
         private bool recording = false;
         private BufferedWaveProvider bufferedWaveProvider;
-        private string mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BatSpeak", "BatSpeak", "Media");
-        private WaveOutEvent waveOut;
+        //private string mediafolderPath = Application.StartupPath + @"\Media\";
+        // private WaveOutEvent waveOut ;
+        private WaveOut waveOut;
         private SoundPlayer player;
+        private string audioFileName;
+        private string mediafolderPath;
+        private string audio_Path;
+        private int samplingRate;
+        private AudioFileReader audioFileReader;
+        private WaveViewer waveViewer;
+
+        //private WaveViewer waveViewer1;
 
         public Form1()
         {
             InitializeComponent();
             getListCameraUSB();
+            timer = new System.Windows.Forms.Timer();
+            timer.Interval = 500;
+            timer.Tick += Timer_Tick;
+            trackBar1.MouseClick += trackBar1_MouseClick;
+            trackBar1.Scroll += trackBar1_Scroll;
+
+
         }
 
 
@@ -138,7 +171,10 @@ namespace BatSpeak
             selectfile();
         }
 
-
+        private void button9_Click(object sender, EventArgs e)
+        {
+            pausePlayback();
+        }
 
         private void OpenCamera()
         {
@@ -245,12 +281,20 @@ namespace BatSpeak
             {
                 comboBox2.SelectedIndex = 0;
             }
+
+            comboBox3.Items.Add("44100");
+            comboBox3.Items.Add("48000");
+            comboBox3.Items.Add("96000");
+            comboBox3.Items.Add("192000");
+            comboBox3.Items.Add("256000");
+            comboBox3.Items.Add("384000");
+
+            comboBox3.SelectedIndex = 0;
+
+
         }
 
-        //private void getListAudioUSB()
-        //{
 
-        //}
 
 
         public void CloseCurrentVideoSource()
@@ -299,13 +343,20 @@ namespace BatSpeak
 
         private void startRecording()
         {
-            //string mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BatSpeak-master", "BatSpeak", "Media");
-            string audio_Path = Path.Combine(mediafolderPath, "Audio");
-            string video_Path = Path.Combine(mediafolderPath, "Video");
-            // string audiofolderPath= Path.Combine(Application.StartupPath, "Media", "Audio");
+            //mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BatSpeak-master", "BatSpeak", "Media");
+            mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "audiorecord");
+
+            audio_Path = Path.Combine(mediafolderPath, "Audio");
+            //string video_Path = Path.Combine(mediafolderPath, "Video");
+            // string audiofolderPath = Path.Combine(Application.StartupPath, "Media", "Audio");
+            string audiofolderPath = Path.Combine(Application.StartupPath, "audiorecord", "Audio");
             if (!Directory.Exists(mediafolderPath))
             {
                 Directory.CreateDirectory(mediafolderPath);
+            }
+            if (!Directory.Exists(audio_Path))
+            {
+                Directory.CreateDirectory(audio_Path);
             }
 
             if (audioDevice != null)
@@ -314,26 +365,34 @@ namespace BatSpeak
                 audioDevice.Dispose();
             }
 
-
+            samplingRate = int.Parse(comboBox3.SelectedItem.ToString());
             audioDevice = new WaveInEvent();
             audioDevice.DeviceNumber = comboBox2.SelectedIndex;
-            audioDevice.WaveFormat = new WaveFormat(44100, 1);
+            audioDevice.WaveFormat = new WaveFormat(samplingRate, 1);
             audioDevice.BufferMilliseconds = (int)((double)bufferSize / (double)audioDevice.WaveFormat.AverageBytesPerSecond * 1000.0);
             bufferedWaveProvider = new BufferedWaveProvider(audioDevice.WaveFormat);
+
             audioDevice.DataAvailable += new EventHandler<WaveInEventArgs>(WaveIn_DataAvailable);
             //string textbox1 = textBox1.Text;
-            string audioFileName = Path.Combine(audio_Path, DateTime.Now.ToString("yyyyMMdd_HH_mm_ss") + ".wav");
+            audioFileName = Path.Combine(audio_Path, DateTime.Now.ToString("yyyyMMdd_HH_mm_ss") + ".wav");
             audioWriter = new WaveFileWriter(audioFileName, audioDevice.WaveFormat);
+
+            waveViewer = new WaveViewer();
+            waveViewer.Dock = DockStyle.Fill;
+
+
             audioDevice.StartRecording();
 
-            //// string videofolderPath= Path.Combine(video_Path, "Video");
-            //  videoDevice = new VideoCaptureDevice(videoDevices[comboBox1.SelectedIndex].MonikerString);
-            //  videoDevice.NewFrame += new NewFrameEventHandler(videoSource_NewFrame);
-            //  videoDevice.Start();
-            //  string video= Path.Combine(video_Path, DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".avi");
-            // // video = Path.Combine(Application.StartupPath, "Videos", "video.avi");
-            //  videoWriter = new VideoFileWriter();
-            //  videoWriter.Open(video, pictureBox1.Width, pictureBox1.Height, 25, VideoCodec.MPEG4);
+
+
+            // string videofolderPath= Path.Combine(video_Path, "Video");
+            //videoDevice = new VideoCaptureDevice(videoDevices[comboBox1.SelectedIndex].MonikerString);
+            //videoDevice.NewFrame += new NewFrameEventHandler(videoSource_NewFrame);
+            //videoDevice.Start();
+            //string video = Path.Combine(video_Path, DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".avi");
+            //// video = Path.Combine(Application.StartupPath, "Videos", "video.avi");
+            //videoWriter = new VideoFileWriter();
+            //videoWriter.Open(video, pictureBox1.Width, pictureBox1.Height, 25, VideoCodec.MPEG4);
 
         }
 
@@ -348,30 +407,38 @@ namespace BatSpeak
         }
 
 
-        //private void videoSource_NewFrame(object sender, NewFrameEventArgs eventArgs)
-        //{
-        //    Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
-        //    pictureBox1.Image = bitmap;
-        //    if (videoWriter != null && videoWriter.IsOpen)
-        //    {
-        //        videoWriter.WriteVideoFrame(bitmap);
-        //    }
-        //}
+        private void videoSource_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+            pictureBox1.Image = bitmap;
+            if (videoWriter != null && videoWriter.IsOpen)
+            {
+                videoWriter.WriteVideoFrame(bitmap);
+            }
+        }
 
 
         private void stopRecording()
         {
+            //audioDevice.StopRecording();
 
-            audioDevice.StopRecording();
-
-            //audioDevice = null;
+            if (audioDevice != null)
+            {
+                audioDevice.StopRecording();
+                audioDevice.Dispose();
+                audioDevice = null;
+            }
 
             if (audioWriter != null)
             {
                 audioWriter.Flush();
                 audioWriter.Dispose();
                 audioWriter = null;
+
             }
+
+
+
 
             //if (File.Exists(Audio))
             //{
@@ -380,11 +447,7 @@ namespace BatSpeak
             //    File.Move(Audio, destAudioFilePath);
             //}
 
-            //audioDevice.DeviceNumber = comboBox2.SelectedIndex;
-            //audioDevice.WaveFormat = new WaveFormat(44100, 1);
-            //audioDevice.BufferMilliseconds = (int)((double)bufferSize / (double)audioDevice.WaveFormat.AverageBytesPerSecond * 1000.0);
-            //bufferedWaveProvider = new BufferedWaveProvider(audioDevice.WaveFormat);
-            //audioDevice.DataAvailable += new EventHandler<WaveInEventArgs>(WaveIn_DataAvailable);
+
 
 
             //if (videoDevice != null && videoDevice.IsRunning)
@@ -397,10 +460,11 @@ namespace BatSpeak
             //}
 
 
-
-
-
         }
+
+
+
+
 
 
         private void selectfile()
@@ -409,27 +473,141 @@ namespace BatSpeak
             openFileDialog.Filter = "WAV files (*.wav)|*.wav";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
+                if (waveOut != null)
+                {
+                    waveOut.Stop();
+                    waveOut.Dispose();
+                }
+                if (audioStream != null)
+                {
+                    audioStream.Dispose();
+                }
                 textBox2.Text = openFileDialog.FileName;
+                audioStream = new WaveFileReader(textBox2.Text);
+                waveOut = new WaveOut();
+                waveOut.Init(audioStream);
+
+
+
             }
         }
-        private void startplayback()
+        private void playbackControl(string control)
         {
-            if (textBox2.Text != "")
+
+            switch (control)
             {
-                if (player == null)
-                {
-                    player = new SoundPlayer();
-                }
-                player.SoundLocation = textBox2.Text;
-                player.Play();
+                case "play":
+                    stopRecording();
+                    Thread.Sleep(100);
+
+                    if (audioStream != null)
+                    {
+                        if (waveOut == null)
+                        {
+                            waveOut = new WaveOut();
+                            waveOut.Init(audioStream);
+                        }
+                        waveOut.Play();
+                        timer.Start();
+                    }
+                    break;
+
+                case "pause":
+                    if (waveOut != null && waveOut.PlaybackState == PlaybackState.Playing)
+                    {
+                        waveOut.Pause();
+                        timer.Stop();
+
+                    }
+                    break;
+
+                case "stop":
+                    if (audioStream != null)
+                    {
+                        audioStream.Position = 0;
+                    }
+                    if (player != null && player.IsLoadCompleted)
+                    {
+                        player.Stop();
+                        player.Dispose();
+                    }
+                    if (waveOut != null)
+                    {
+                        if (waveOut.PlaybackState == PlaybackState.Playing || waveOut.PlaybackState == PlaybackState.Paused)
+                        {
+                            waveOut.Stop();
+                        }
+                        waveOut.Dispose();
+                        waveOut = null;
+                    }
+                    timer.Stop();
+                    trackBar1.Value = 0;
+                    textBox4.Text = "00:00:00";
+                    break;
             }
         }
 
+        private void startplayback()
+        {
+            playbackControl("play");
+
+        }
 
         private void stopplayback()
         {
-            player.Stop();
+            playbackControl("stop");
+
+
         }
+
+        private void pausePlayback()
+        {
+            ;
+            playbackControl("pause");
+
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            if (audioStream != null)
+            {
+                TimeSpan currentTime = TimeSpan.FromSeconds((double)audioStream.Position / audioStream.WaveFormat.AverageBytesPerSecond);
+                TimeSpan totalTime = audioStream.TotalTime;
+                textBox4.Text = string.Format("{0:mm\\:ss} / {1:mm\\:ss}", currentTime, totalTime);
+                trackBar1.Maximum = (int)audioStream.Length;
+                if (audioStream.Position < audioStream.Length)
+                {
+                    trackBar1.Value = (int)(audioStream.Position * trackBar1.Maximum / audioStream.Length);
+                }
+                else
+                {
+                    stopplayback();
+                }
+            }
+        }
+
+        private void trackBar1_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (audioStream != null)
+            {
+                var pos = e.X * audioStream.Length / trackBar1.Width;
+                audioStream.Position = pos;
+                trackBar1.Value = (int)(pos * trackBar1.Maximum / audioStream.Length);
+                startplayback();
+            }
+        }
+
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            if (audioStream != null)
+            {
+                int pos = (int)(trackBar1.Value * audioStream.Length / trackBar1.Maximum);
+                audioStream.Position = pos;
+                startplayback();
+            }
+        }
+
+
 
 
     }
@@ -438,3 +616,118 @@ namespace BatSpeak
 
 }
 
+
+
+
+
+
+
+/*private void selectfile(object sender, WaveInEventArgs e)
+{
+    OpenFileDialog openFileDialog = new OpenFileDialog();
+     openFileDialog.Filter = "WAV files (*.wav)|*.wav";
+     if (openFileDialog.ShowDialog() == DialogResult.OK)
+     {
+         if (player != null)
+         {
+             player.Stop();
+             player.Dispose();
+         }
+         textBox2.Text = openFileDialog.FileName;
+         audioStream = new WaveFileReader(textBox2.Text);
+         waveOut = new WaveOut();
+         waveOut.Init(audioStream);
+
+
+     }
+
+
+}
+
+private void startplayback(object sender, WaveInEventArgs e)
+{
+    if (textBox2.Text != "")
+    {
+        if (player != null)
+        {
+            player.Dispose();
+        }
+
+        player = new SoundPlayer();
+        player.SoundLocation = textBox2.Text;
+
+            player.Load();
+            player.Play();
+            timer.Start();
+
+
+    }
+
+
+}
+
+private void stopplayback(object sender, WaveInEventArgs e)
+{
+    player.Stop();
+    //audioStream.Position = 0;
+    timer.Stop();
+    trackBar1.Value = 0;
+    textBox4.Text = "00:00:00";
+
+    timer.Stop();
+
+}
+
+private void pausePlayback(object sender, WaveInEventArgs e)
+{
+    player.Stop();
+}
+
+private void Timer_Tick(object sender, EventArgs e)
+{
+
+    if (audioStream != null)
+    {
+        TimeSpan currentTime = TimeSpan.FromSeconds((double)audioStream.Position / audioStream.WaveFormat.AverageBytesPerSecond);
+        TimeSpan totalTime = audioStream.TotalTime;
+        textBox4.Text = string.Format("{0:mm\\:ss} / {1:mm\\:ss}", currentTime, totalTime);
+        trackBar1.Maximum = (int)audioStream.Length;
+
+        *//* if (audioStream.Position < audioStream.Length)
+         {
+
+             trackBar1.Value = (int)(audioStream.Position * trackBar1.Maximum / audioStream.Length);
+             // textBox4.Text = TimeSpan.FromMilliseconds(audioStream.Position).ToString(@"hh\:mm\:ss");
+
+
+         }
+         else
+         {
+             stopplayback();
+         }*//*
+    }
+}
+
+
+private void trackBar1_MouseClick(object sender, MouseEventArgs e)
+{
+    if (audioStream != null)
+    {
+        var pos = e.X * audioStream.Length / trackBar1.Width;
+        audioStream.Position = pos;
+        trackBar1.Value = (int)(pos * trackBar1.Maximum / audioStream.Length);
+    }
+}
+
+private void trackBar1_Scroll(object sender, EventArgs e)
+{
+    if (audioStream != null)
+    {
+        int pos = (int)(trackBar1.Value * audioStream.Length / trackBar1.Maximum);
+        audioStream.Position = pos;
+        if (player != null && player.IsLoadCompleted)
+        {
+            player.Play();
+        }
+    }
+}*/
