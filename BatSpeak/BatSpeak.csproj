@@ -2,11 +2,14 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>True</UseWPF>
+    <StartupObject></StartupObject>
+    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,10 +20,10 @@
     <PackageReference Include="AForge.Video" Version="2.2.5" />
     <PackageReference Include="AForge.Video.DirectShow" Version="2.2.5" />
     <PackageReference Include="AForge.Video.FFMPEG" Version="2.2.5.1-rc" />
+    <PackageReference Include="Basler.Pylon.NET.x64" Version="7.3.0.19429" />
     <PackageReference Include="NAudio" Version="2.1.0" />
     <PackageReference Include="NAudio.WaveFormRenderer" Version="2.0.0" />
     <PackageReference Include="System.Windows.Forms.DataVisualization" Version="1.0.0-prerelease.20110.1" />
-    <PackageReference Include="WinForms.DataVisualization" Version="1.8.0" />
   </ItemGroup>
 
   <ItemGroup>
