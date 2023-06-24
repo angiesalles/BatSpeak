@@ -50,8 +50,8 @@ using WaveStream = NAudio.Wave.WaveStream;
 using System.Windows.Forms.DataVisualization;
 using Timer = System.Windows.Forms.Timer;
 using System.Drawing.Drawing2D;
-//using Basler.Pylon;
-//Microsoft.Windows.SDK.Contracts
+using System.Windows.Controls;
+using Image = System.Drawing.Image;
 
 namespace BatSpeak
 {
@@ -77,7 +77,7 @@ namespace BatSpeak
         // private bool recording = false;
         private BufferedWaveProvider bufferedWaveProvider;
         //private string mediafolderPath = Application.StartupPath + @"\Media\";
-        // private WaveOutEvent waveOut ;
+        // private WaveOutEvent waveOut1 ;
         private WaveOut waveOut;
         private SoundPlayer player;
         private string audioFileName;
@@ -108,14 +108,14 @@ namespace BatSpeak
 
         private List<float> waveformSamples;
         private int samplesPerPixel = 100;
-
+        private Dictionary<string, string> speakers;
         //private WaveViewer waveViewer1;
 
         public Form1()
         {
             InitializeComponent();
             getListCameraUSB();
-
+            InitializeSpeakers();
 
             timer = new System.Windows.Forms.Timer();
             timer.Interval = 500;
@@ -347,7 +347,26 @@ namespace BatSpeak
 
 
         }
+        private void InitializeSpeakers()
+        {
+            speakers = new Dictionary<string, string>();
 
+            // Add the available speakers to the dictionary
+            for (int deviceIndex = 0; deviceIndex < WaveOut.DeviceCount; deviceIndex++)
+            {
+                WaveOutCapabilities deviceInfo = WaveOut.GetCapabilities(deviceIndex);
+                speakers.Add(deviceInfo.ProductName, deviceInfo.ProductGuid.ToString());
+            }
+
+            // Populate the dropdown with the speaker names
+            foreach (var speaker in speakers)
+            {
+                comboBox4.Items.Add(speaker.Key);
+
+            }
+
+
+        }
 
 
 
@@ -419,15 +438,24 @@ namespace BatSpeak
         private void startRecording()
         {
 
-
-
-
-
             //mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BatSpeak-master", "BatSpeak", "Media");
             mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "audiorecord");
             // cache = Path.Combine(mediafolderPath, "cache");
-            audio_Path = Path.Combine(mediafolderPath, "Audio");
+            //audio_Path = Path.Combine(mediafolderPath, "Audio");
 
+
+            FolderBrowserDialog folderDialog = new FolderBrowserDialog();
+            folderDialog.SelectedPath = audio_Path;
+            // Show the dialog and check if the user selected a folder
+            if (folderDialog.ShowDialog() == DialogResult.OK)
+            {
+                // Get the selected folder path
+                string selectedFolder = folderDialog.SelectedPath;
+
+                // Do something with the selected folder path
+                // For example, update the audio_Path variable
+                audio_Path = selectedFolder;
+            }
 
             if (!Directory.Exists(mediafolderPath))
             {
@@ -524,9 +552,10 @@ namespace BatSpeak
 
         }
 
+
         private void selectfile()
         {
-
+            //waveOut.DeviceNumber = comboBox4.SelectedIndex;
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "WAV files (*.wav)|*.wav";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -555,6 +584,7 @@ namespace BatSpeak
 
                 audioStream = new WaveFileReader(textBox2.Text);
                 waveOut = new WaveOut();
+                waveOut.DeviceNumber = comboBox4.SelectedIndex;
                 waveOut.Init(audioStream);
 
             }
@@ -583,6 +613,7 @@ namespace BatSpeak
 
         private void playbackControl(string control)
         {
+            //waveOut.DeviceNumber = comboBox4.SelectedIndex;
 
             switch (control)
             {
@@ -594,7 +625,10 @@ namespace BatSpeak
                     {
                         if (waveOut == null)
                         {
+
+
                             waveOut = new WaveOut();
+                            waveOut.DeviceNumber = comboBox4.SelectedIndex;
                             waveOut.Init(audioStream);
                         }
 
@@ -607,7 +641,9 @@ namespace BatSpeak
                 case "pause":
                     if (waveOut != null && waveOut.PlaybackState == PlaybackState.Playing)
                     {
+                        //waveOut.DeviceNumber = comboBox4.SelectedIndex;
                         waveOut.Pause();
+
                         timer.Stop();
 
                     }
@@ -644,6 +680,24 @@ namespace BatSpeak
                     break;
             }
         }
+        private int GetSelectedSpeakerDeviceNumber()
+        {
+            waveOut = new WaveOut();
+            string selectedSpeaker = comboBox4.SelectedItem.ToString();
+            string speakerGuid = speakers[selectedSpeaker];
+
+            for (int deviceIndex = 0; deviceIndex < WaveOut.DeviceCount; deviceIndex++)
+            {
+                WaveOutCapabilities deviceInfo = WaveOut.GetCapabilities(deviceIndex);
+                if (deviceInfo.ProductGuid.ToString() == speakerGuid)
+                {
+                    return deviceIndex;
+                }
+            }
+
+            // Return the default device number if the selected speaker is not found
+            return waveOut.DeviceNumber;
+        }
 
 
 
@@ -652,7 +706,8 @@ namespace BatSpeak
 
         private void startplayback()
         {
-
+            WaveOut waveOut = new WaveOut();
+            waveOut.DeviceNumber = comboBox4.SelectedIndex;
             playbackControl("play");
 
         }
@@ -731,118 +786,3 @@ namespace BatSpeak
     }
 }
 
-
-
-
-
-
-
-/*private void selectfile(object sender, WaveInEventArgs e)
-{
-    OpenFileDialog openFileDialog = new OpenFileDialog();
-     openFileDialog.Filter = "WAV files (*.wav)|*.wav";
-     if (openFileDialog.ShowDialog() == DialogResult.OK)
-     {
-         if (player != null)
-         {
-             player.Stop();
-             player.Dispose();
-         }
-         textBox2.Text = openFileDialog.FileName;
-         audioStream = new WaveFileReader(textBox2.Text);
-         waveOut = new WaveOut();
-         waveOut.Init(audioStream);
-
-
-     }
-
-
-}
-
-private void startplayback(object sender, WaveInEventArgs e)
-{
-    if (textBox2.Text != "")
-    {
-        if (player != null)
-        {
-            player.Dispose();
-        }
-
-        player = new SoundPlayer();
-        player.SoundLocation = textBox2.Text;
-
-            player.Load();
-            player.Play();
-            timer.Start();
-
-
-    }
-
-
-}
-
-private void stopplayback(object sender, WaveInEventArgs e)
-{
-    player.Stop();
-    //audioStream.Position = 0;
-    timer.Stop();
-    trackBar1.Value = 0;
-    textBox4.Text = "00:00:00";
-
-    timer.Stop();
-
-}
-
-private void pausePlayback(object sender, WaveInEventArgs e)
-{
-    player.Stop();
-}
-
-private void Timer_Tick(object sender, EventArgs e)
-{
-
-    if (audioStream != null)
-    {
-        TimeSpan currentTime = TimeSpan.FromSeconds((double)audioStream.Position / audioStream.WaveFormat.AverageBytesPerSecond);
-        TimeSpan totalTime = audioStream.TotalTime;
-        textBox4.Text = string.Format("{0:mm\\:ss} / {1:mm\\:ss}", currentTime, totalTime);
-        trackBar1.Maximum = (int)audioStream.Length;
-
-        *//* if (audioStream.Position < audioStream.Length)
-         {
-
-             trackBar1.Value = (int)(audioStream.Position * trackBar1.Maximum / audioStream.Length);
-             // textBox4.Text = TimeSpan.FromMilliseconds(audioStream.Position).ToString(@"hh\:mm\:ss");
-
-
-         }
-         else
-         {
-             stopplayback();
-         }*//*
-    }
-}
-
-
-private void trackBar1_MouseClick(object sender, MouseEventArgs e)
-{
-    if (audioStream != null)
-    {
-        var pos = e.X * audioStream.Length / trackBar1.Width;
-        audioStream.Position = pos;
-        trackBar1.Value = (int)(pos * trackBar1.Maximum / audioStream.Length);
-    }
-}
-
-private void trackBar1_Scroll(object sender, EventArgs e)
-{
-    if (audioStream != null)
-    {
-        int pos = (int)(trackBar1.Value * audioStream.Length / trackBar1.Maximum);
-        audioStream.Position = pos;
-        if (player != null && player.IsLoadCompleted)
-        {
-            player.Play();
-        }
-    }
-}*/

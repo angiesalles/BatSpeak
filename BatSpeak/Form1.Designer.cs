@@ -30,7 +30,6 @@ namespace BatSpeak
         /// </summary>
         private void InitializeComponent()
         {
-            
             button1 = new Button();
             button2 = new Button();
             button3 = new Button();
@@ -60,12 +59,14 @@ namespace BatSpeak
             pictureBox3 = new System.Windows.Forms.PictureBox();
             pictureBox4 = new System.Windows.Forms.PictureBox();
             waveViewer1 = new NAudio.Gui.WaveViewer();
-            
+            comboBox4 = new ComboBox();
+            pictureBox5 = new System.Windows.Forms.PictureBox();
+            label8 = new Label();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBar1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox4).BeginInit();
-           
+            ((System.ComponentModel.ISupportInitialize)pictureBox5).BeginInit();
             SuspendLayout();
             // 
             // button1
@@ -155,7 +156,7 @@ namespace BatSpeak
             // 
             // textBox2
             // 
-            textBox2.Location = new Point(858, 369);
+            textBox2.Location = new Point(858, 427);
             textBox2.Margin = new Padding(3, 4, 3, 4);
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(177, 27);
@@ -191,7 +192,7 @@ namespace BatSpeak
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(863, 345);
+            label1.Location = new Point(864, 403);
             label1.Margin = new Padding(2, 0, 2, 0);
             label1.Name = "label1";
             label1.Size = new Size(155, 20);
@@ -261,7 +262,7 @@ namespace BatSpeak
             // button8
             // 
             button8.Image = Properties.Resources.selectfile;
-            button8.Location = new Point(806, 365);
+            button8.Location = new Point(800, 423);
             button8.Margin = new Padding(2);
             button8.Name = "button8";
             button8.Size = new Size(35, 35);
@@ -357,16 +358,41 @@ namespace BatSpeak
             waveViewer1.TabIndex = 30;
             waveViewer1.WaveStream = null;
             // 
-          
+            // comboBox4
             // 
-           
+            comboBox4.FormattingEnabled = true;
+            comboBox4.Location = new Point(858, 358);
+            comboBox4.Name = "comboBox4";
+            comboBox4.Size = new Size(174, 28);
+            comboBox4.TabIndex = 31;
+            // 
+            // pictureBox5
+            // 
+            pictureBox5.Image = Properties.Resources.speaker;
+            pictureBox5.Location = new Point(800, 351);
+            pictureBox5.Name = "pictureBox5";
+            pictureBox5.Size = new Size(35, 35);
+            pictureBox5.TabIndex = 32;
+            pictureBox5.TabStop = false;
+            // 
+            // label8
+            // 
+            label8.AutoSize = true;
+            label8.Location = new Point(875, 335);
+            label8.Margin = new Padding(2, 0, 2, 0);
+            label8.Name = "label8";
+            label8.Size = new Size(139, 20);
+            label8.TabIndex = 33;
+            label8.Text = "Select your Speaker";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1163, 735);
-            
+            Controls.Add(label8);
+            Controls.Add(pictureBox5);
+            Controls.Add(comboBox4);
             Controls.Add(waveViewer1);
             Controls.Add(pictureBox4);
             Controls.Add(pictureBox3);
@@ -403,7 +429,7 @@ namespace BatSpeak
             ((System.ComponentModel.ISupportInitialize)trackBar1).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox3).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox4).EndInit();
-            
+            ((System.ComponentModel.ISupportInitialize)pictureBox5).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -444,6 +470,8 @@ namespace BatSpeak
         private System.CodeDom.CodeTypeReference chart4;
         private NAudio.Gui.WaveViewer waveViewer1;
         private System.CodeDom.CodeTypeReference chart1;
-      
+        private ComboBox comboBox4;
+        private System.Windows.Forms.PictureBox pictureBox5;
+        private Label label8;
     }
 }
