@@ -415,8 +415,6 @@ namespace BatSpeak
         }
 
 
-
-
         // Timer tick event handler for the pulsating effect
         private void RecordingTimer_Tick(object sender, EventArgs e)
         {
