@@ -25,7 +25,6 @@ using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using NAudio.WaveFormRenderer;
 
-
 //using Microsoft.VisualBasic.Devices;
 
 using System.Media;
@@ -52,6 +51,10 @@ using Timer = System.Windows.Forms.Timer;
 using System.Drawing.Drawing2D;
 using System.Windows.Controls;
 using Image = System.Drawing.Image;
+using ScottPlot;
+using FftSharp;
+using NAudio.CoreAudioApi;
+using ScottPlot.Plottable;
 
 namespace BatSpeak
 {
@@ -59,10 +62,11 @@ namespace BatSpeak
     {
         private FilterInfoCollection videoDevices;
         //private FilterInfoCollection audioDevices;
-        private System.Windows.Forms.Timer timer;
+        private System.Windows.Forms.Timer timer,timer2;
         private VideoCaptureDevice videoDevice;
+
         private WaveStream audioStream;
-        private int bufferSize = 65536;
+        private int bufferSize = (int)Math.Pow(2, 11);
         private VideoCapabilities[] snapshotCapabilities;
         private ArrayList listCamera = new ArrayList();
         private ArrayList listAudio = new ArrayList();
@@ -111,11 +115,29 @@ namespace BatSpeak
         private Dictionary<string, string> speakers;
         //private WaveViewer waveViewer1;
 
+        private ScottPlot.Plottable.SignalPlot SignalPlot;
+        private int RATE;
+        private int BUFFERSIZE = (int)Math.Pow(2, 11); // must be a multiple of 2
+
+        private double[] AudioValues;
+        private double[] FftValues;
+
+
+        private System.Windows.Controls.ProgressBar pbVolume;
         public Form1()
         {
             InitializeComponent();
             getListCameraUSB();
             InitializeSpeakers();
+
+
+
+            //////scotplot//////formsplot1
+            timer2=new System.Windows.Forms.Timer();
+            timer2.Interval = 10;
+            timer2.Tick += timers_Tick;
+            //////////////////////////
+            
 
             timer = new System.Windows.Forms.Timer();
             timer.Interval = 500;
@@ -124,6 +146,7 @@ namespace BatSpeak
             trackBar1.MouseClick += trackBar1_MouseClick;
             trackBar1.Scroll += trackBar1_Scroll;
 
+            /////button pulsating effect//////////
             // Configure the Timer for the pulsating effect
             recordingTimer = new Timer();
             recordingTimer.Interval = 500; // Timer interval for the pulsating effect in milliseconds
@@ -131,6 +154,16 @@ namespace BatSpeak
 
             originalButtonWidth = button1.Width;
             originalButtonHeight = button1.Height;
+            /////////////////////////////////////////
+
+            formsPlot1.Plot.YLabel("Spectral Power");
+            formsPlot1.Plot.XLabel("Frequency (kHz)");
+            formsPlot1.Refresh();
+            // signalPlot = formsPlot1.Plot.AddSignal(new double[] { }); // Empty initial data
+            // microphoneSignal = formsPlot1.plt.PlotSignal(new double[0], 44100, color: System.Drawing.Color.Blue);
+
+
+
 
 
         }
@@ -347,6 +380,11 @@ namespace BatSpeak
 
 
         }
+
+
+
+
+
         private void InitializeSpeakers()
         {
             speakers = new Dictionary<string, string>();
@@ -476,19 +514,21 @@ namespace BatSpeak
             audioDevice.WaveFormat = new WaveFormat(samplingRate, 1);
             audioDevice.BufferMilliseconds = (int)((double)bufferSize / (double)audioDevice.WaveFormat.AverageBytesPerSecond * 1000.0);
             bufferedWaveProvider = new BufferedWaveProvider(audioDevice.WaveFormat);
-
-
+            bufferedWaveProvider.BufferLength = bufferSize * 2;
+            bufferedWaveProvider.DiscardOnBufferOverflow = true;
             audioDevice.DataAvailable += new EventHandler<WaveInEventArgs>(WaveIn_DataAvailable);
             //string textbox1 = textBox1.Text;
 
             audioFileName = Path.Combine(audio_Path, DateTime.Now.ToString("yyyyMMdd_HH_mm_ss") + ".wav");
             audioWriter = new WaveFileWriter(audioFileName, audioDevice.WaveFormat);
 
-            animationStep = 0;
-            animationDirection = 1;
+
+            AudioValues = new double[samplingRate * audioDevice.BufferMilliseconds / 1000];
+            formsPlot1.Plot.AddSignal(AudioValues, samplingRate / 1000);
 
             audioDevice.StartRecording();
             recordingTimer.Start();
+            timer2.Start();
 
 
             // string videofolderPath= Path.Combine(video_Path, "Video");
@@ -500,18 +540,29 @@ namespace BatSpeak
             //videoWriter = new VideoFileWriter();
             //videoWriter.Open(video, pictureBox1.Width, pictureBox1.Height, 25, VideoCodec.MPEG4);
 
+
+
+
         }
 
 
         private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
+            for (int i = 0; i < e.Buffer.Length / 2; i++)
+                AudioValues[i] = BitConverter.ToInt16(e.Buffer, i * 2);
+
             if (audioWriter != null)
             {
                 audioWriter.Write(e.Buffer, 0, e.BytesRecorded);
+
                 audioWriter.Flush();
+
+
             }
+            bufferedWaveProvider.AddSamples(e.Buffer, 0, e.BytesRecorded);
 
         }
+        //SignalPlot signalPlots = formsPlot1.Plot.AddSignal(new float[] { }); // Empty initial data
 
 
         private void videoSource_NewFrame(object sender, NewFrameEventArgs eventArgs)
@@ -546,7 +597,9 @@ namespace BatSpeak
             button1.Width = originalButtonWidth;
             button1.Height = originalButtonHeight;
 
-
+            timer2.Stop();
+            /*formsPlot1.Plot.Clear();
+            formsPlot1.Refresh();*/
 
         }
 
@@ -584,6 +637,8 @@ namespace BatSpeak
                 waveOut = new WaveOut();
                 waveOut.DeviceNumber = comboBox4.SelectedIndex;
                 waveOut.Init(audioStream);
+
+
 
             }
             /*  waveViewer1.BackColor = Color.White;
@@ -781,6 +836,49 @@ namespace BatSpeak
         }
 
 
+
+        
+        private void timers_Tick(object sender, EventArgs e) {
+
+            int level = (int)AudioValues.Max();
+            Console.Write(level);
+
+
+            // auto-scale the plot Y axis limits
+            var currentLimits = formsPlot1.Plot.GetAxisLimits();
+            formsPlot1.Plot.SetAxisLimits(
+                yMin: Math.Min(currentLimits.YMin, -level),
+                yMax: Math.Max(currentLimits.YMax, level));
+
+            // request a redraw using a non-blocking render queue
+            formsPlot1.RefreshRequest();
+
+
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+
+            //updategraph();
+           /* int level = (int)AudioValues.Max();
+
+            // auto-scale the maximum progressbar level
+            if (level > pbVolume.Maximum)
+                pbVolume.Maximum = level;
+            pbVolume.Value = level;
+
+            // auto-scale the plot Y axis limits
+            var currentLimits = formsPlot1.Plot.GetAxisLimits();
+            formsPlot1.Plot.SetAxisLimits(
+                yMin: Math.Min(currentLimits.YMin, -level),
+                yMax: Math.Max(currentLimits.YMax, level));
+
+            // request a redraw using a non-blocking render queue
+            formsPlot1.RefreshRequest();*/
+
+
+
+        }
     }
 }
 
