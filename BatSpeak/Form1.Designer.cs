@@ -30,7 +30,6 @@ namespace BatSpeak
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
             button1 = new Button();
             button2 = new Button();
             button3 = new Button();
@@ -64,7 +63,7 @@ namespace BatSpeak
             pictureBox5 = new System.Windows.Forms.PictureBox();
             label8 = new Label();
             formsPlot1 = new ScottPlot.FormsPlot();
-            timer1 = new System.Windows.Forms.Timer(components);
+            formsPlot2 = new ScottPlot.FormsPlot();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBar1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
@@ -78,7 +77,7 @@ namespace BatSpeak
             button1.Location = new Point(863, 224);
             button1.Margin = new Padding(3, 4, 3, 4);
             button1.Name = "button1";
-            button1.Size = new Size(85, 85);
+            button1.Size = new Size(110, 110);
             button1.TabIndex = 0;
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
@@ -178,7 +177,7 @@ namespace BatSpeak
             // comboBox1
             // 
             comboBox1.FormattingEnabled = true;
-            comboBox1.Location = new Point(74, 326);
+            comboBox1.Location = new Point(76, 303);
             comboBox1.Name = "comboBox1";
             comboBox1.Size = new Size(163, 28);
             comboBox1.TabIndex = 10;
@@ -225,7 +224,7 @@ namespace BatSpeak
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(95, 302);
+            label4.Location = new Point(97, 279);
             label4.Margin = new Padding(2, 0, 2, 0);
             label4.Name = "label4";
             label4.Size = new Size(137, 20);
@@ -390,22 +389,26 @@ namespace BatSpeak
             // 
             // formsPlot1
             // 
-            formsPlot1.Location = new Point(58, 403);
+            formsPlot1.Location = new Point(14, 335);
             formsPlot1.Margin = new Padding(5, 4, 5, 4);
             formsPlot1.Name = "formsPlot1";
-            formsPlot1.Size = new Size(668, 208);
+            formsPlot1.Size = new Size(779, 248);
             formsPlot1.TabIndex = 34;
             // 
-            // timer1
+            // formsPlot2
             // 
-            timer1.Interval = 10;
-            timer1.Tick += timer1_Tick;
+            formsPlot2.Location = new Point(18, 564);
+            formsPlot2.Margin = new Padding(5, 4, 5, 4);
+            formsPlot2.Name = "formsPlot2";
+            formsPlot2.Size = new Size(817, 237);
+            formsPlot2.TabIndex = 35;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1163, 735);
+            ClientSize = new Size(1163, 814);
+            Controls.Add(formsPlot2);
             Controls.Add(formsPlot1);
             Controls.Add(label8);
             Controls.Add(pictureBox5);
@@ -491,6 +494,6 @@ namespace BatSpeak
         private System.Windows.Forms.PictureBox pictureBox5;
         private Label label8;
         private ScottPlot.FormsPlot formsPlot1;
-        private System.Windows.Forms.Timer timer1;
+        private ScottPlot.FormsPlot formsPlot2;
     }
 }

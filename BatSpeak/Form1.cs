@@ -28,8 +28,7 @@ using NAudio.WaveFormRenderer;
 //using Microsoft.VisualBasic.Devices;
 
 using System.Media;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using System.Windows.Forms.DataVisualization.Charting;
+
 using PlaybackState = NAudio.Wave.PlaybackState;
 
 using File = System.IO.File;
@@ -62,7 +61,7 @@ namespace BatSpeak
     {
         private FilterInfoCollection videoDevices;
         //private FilterInfoCollection audioDevices;
-        private System.Windows.Forms.Timer timer,timer2;
+        private System.Windows.Forms.Timer timer, timer2, timer3;
         private VideoCaptureDevice videoDevice;
 
         private WaveStream audioStream;
@@ -121,7 +120,13 @@ namespace BatSpeak
 
         private double[] AudioValues;
         private double[] FftValues;
+        private double[] waveform;
+        private double currentPosition;
 
+        private VLine verticalLine;
+
+        private const double SlideStep = 0.5; // Slide step size
+                                              // private double currentPosition;
 
         private System.Windows.Controls.ProgressBar pbVolume;
         public Form1()
@@ -133,14 +138,21 @@ namespace BatSpeak
 
 
             //////scotplot//////formsplot1
-            timer2=new System.Windows.Forms.Timer();
+            timer2 = new System.Windows.Forms.Timer();
             timer2.Interval = 10;
             timer2.Tick += timers_Tick;
             //////////////////////////
-            
+
+            //////scotplot//////formsplot2
+            timer3 = new System.Windows.Forms.Timer();
+            timer3.Interval = 100;
+            timer3.Tick += wavgraph_Tick;
+            //////////////////////////
+
+
 
             timer = new System.Windows.Forms.Timer();
-            timer.Interval = 500;
+            timer.Interval = 100;
             timer.Tick += Timer_Tick;
 
             trackBar1.MouseClick += trackBar1_MouseClick;
@@ -378,11 +390,7 @@ namespace BatSpeak
 
             comboBox3.SelectedIndex = 0;
 
-
         }
-
-
-
 
 
         private void InitializeSpeakers()
@@ -405,9 +413,12 @@ namespace BatSpeak
 
 
         }
+        private void pictures() { 
+        
+        }
 
 
-
+  
         public void CloseCurrentVideoSource()
         {
             try
@@ -458,8 +469,8 @@ namespace BatSpeak
         {
             if (button1.Width == originalButtonWidth && button1.Height == originalButtonHeight)
             {
-                button1.Width = 80;
-                button1.Height = 80;
+                button1.Width = 100;
+                button1.Height = 100;
             }
             else
             {
@@ -473,7 +484,7 @@ namespace BatSpeak
 
         private void startRecording()
         {
-
+            formsPlot1.Plot.Clear();
             //mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BatSpeak-master", "BatSpeak", "Media");
             mediafolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "audiorecord");
             // cache = Path.Combine(mediafolderPath, "cache");
@@ -606,6 +617,7 @@ namespace BatSpeak
 
         private void selectfile()
         {
+            formsPlot2.Plot.Clear();
             //waveOut.DeviceNumber = comboBox4.SelectedIndex;
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "WAV files (*.wav)|*.wav";
@@ -634,13 +646,39 @@ namespace BatSpeak
                 textBox2.Text = openFileDialog.FileName;
 
                 audioStream = new WaveFileReader(textBox2.Text);
+                waveFileReader = new WaveFileReader(textBox2.Text);
                 waveOut = new WaveOut();
                 waveOut.DeviceNumber = comboBox4.SelectedIndex;
                 waveOut.Init(audioStream);
 
+                waveFileReader = new WaveFileReader(textBox2.Text);
+                byte[] audioData = new byte[waveFileReader.Length];
+                waveFileReader.Read(audioData, 0, audioData.Length);
+
+                // Convert the byte data to a double array
+                waveform = new double[audioData.Length / 2]; // Assumes 16-bit audio (2 bytes per sample)
+                for (int i = 0; i < waveform.Length; i++)
+                {
+                    short sampleValue = BitConverter.ToInt16(audioData, i * 2);
+                    waveform[i] = sampleValue;
+                }
+                formsPlot2.Plot.AddSignal(waveform, waveFileReader.WaveFormat.SampleRate);
+
+                // Customize the plot settings
+                formsPlot2.Plot.YLabel("Amplitude");
+                formsPlot2.Plot.XLabel("Time (seconds)");
+                formsPlot2.Plot.Title("Waveform Graph");
 
 
+                currentPosition = 0;
+
+                verticalLine = formsPlot2.Plot.AddVerticalLine(currentPosition, color: System.Drawing.Color.Red);
+
+
+                // Refresh the plot
+                formsPlot2.Refresh();
             }
+
             /*  waveViewer1.BackColor = Color.White;
               waveViewer1.SamplesPerPixel = 1000;
               waveViewer1.StartPosition = 40000;
@@ -687,6 +725,7 @@ namespace BatSpeak
 
                         waveOut.Play();
                         timer.Start();
+                        timer3.Start();
                     }
 
                     break;
@@ -698,6 +737,7 @@ namespace BatSpeak
                         waveOut.Pause();
 
                         timer.Stop();
+                        timer3.Stop();
 
                     }
                     break;
@@ -730,6 +770,9 @@ namespace BatSpeak
                         audioWriter.Dispose();
                         audioWriter = null;
                     }
+                    timer3.Stop();
+                    currentPosition = 0;
+                    UpdateVerticalLineX();
                     break;
             }
         }
@@ -770,8 +813,6 @@ namespace BatSpeak
             playbackControl("stop");
 
 
-
-
         }
 
         private void pausePlayback()
@@ -780,11 +821,6 @@ namespace BatSpeak
             playbackControl("pause");
 
         }
-
-
-
-
-
 
         private void Timer_Tick(object sender, EventArgs e)
         {
@@ -829,16 +865,11 @@ namespace BatSpeak
                     player.Play();
                 }
             }
-
-
-
-
         }
 
 
-
-        
-        private void timers_Tick(object sender, EventArgs e) {
+        private void timers_Tick(object sender, EventArgs e)
+        {
 
             int level = (int)AudioValues.Max();
             Console.Write(level);
@@ -856,29 +887,36 @@ namespace BatSpeak
 
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+
+
+        private void wavgraph_Tick(object sender, EventArgs e)
         {
 
-            //updategraph();
-           /* int level = (int)AudioValues.Max();
-
-            // auto-scale the maximum progressbar level
-            if (level > pbVolume.Maximum)
-                pbVolume.Maximum = level;
-            pbVolume.Value = level;
-
-            // auto-scale the plot Y axis limits
-            var currentLimits = formsPlot1.Plot.GetAxisLimits();
-            formsPlot1.Plot.SetAxisLimits(
-                yMin: Math.Min(currentLimits.YMin, -level),
-                yMax: Math.Max(currentLimits.YMax, level));
-
-            // request a redraw using a non-blocking render queue
-            formsPlot1.RefreshRequest();*/
-
-
-
+            // Update the position of the vertical line
+            currentPosition += 0.11;
+            UpdateVerticalLineX();
         }
+        private void UpdateVerticalLineX()
+        {
+            // Remove the previous vertical line
+            formsPlot2.Plot.Remove(verticalLine);
+
+            // Add a new vertical line with the updated X position
+            verticalLine = formsPlot2.Plot.AddVerticalLine(currentPosition, color: System.Drawing.Color.Red);
+
+            // Refresh the plot
+            formsPlot2.Render();
+        }
+
+
+        //Disposing the resources
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            stopRecording();
+            CloseCurrentVideoSource();
+        }
+
     }
 }
 

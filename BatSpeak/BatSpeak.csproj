@@ -13,6 +13,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="a.ico" />
+    <Content Include="b.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Accord.Video.FFMPEG" Version="3.8.0" />
     <PackageReference Include="Accord.Video.FFMPEG.x64" Version="3.8.0" />
     <PackageReference Include="AForge.Controls" Version="2.2.5" />
